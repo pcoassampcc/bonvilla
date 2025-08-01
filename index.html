@@ -6,6 +6,8 @@
     <title>PDFToolsHub - All-in-One PDF Processing Platform</title>
     <meta name="description" content="Free online PDF tools - merge, split, compress, convert, and edit PDF files easily. No registration required.">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -699,6 +701,38 @@
         .checkbox-group input[type="checkbox"] {
             width: auto;
         }
+
+        .page-range-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .page-range-inputs {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .page-range-inputs input {
+            flex: 1;
+        }
+
+        .page-range-preview {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f0f0f0;
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+        }
+
+        .download-area {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -1184,6 +1218,7 @@
         let selectedFiles = [];
         let isProcessing = false;
         let currentUser = null;
+        let processedPDF = null;
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -1329,6 +1364,16 @@
                         <label for="${optionKey}">${formatLabel(optionKey)}</label>
                         <input type="number" id="${optionKey}" name="${optionKey}" value="${option}" min="0" max="100">
                     `;
+                } else if (typeof option === 'string' && optionKey === 'pageRange') {
+                    // Special case for page range input
+                    optionGroup.innerHTML = `
+                        <label for="${optionKey}">${formatLabel(optionKey)}</label>
+                        <input type="text" id="${optionKey}" name="${optionKey}" value="${option}" placeholder="e.g. 1-5, 8, 11-13">
+                        <div class="page-range-preview" id="pageRangePreview">All pages will be processed</div>
+                    `;
+                    
+                    // Add event listener for page range preview
+                    document.getElementById(optionKey).addEventListener('input', updatePageRangePreview);
                 } else if (typeof option === 'string') {
                     // Text input
                     optionGroup.innerHTML = `
@@ -1353,6 +1398,27 @@
             });
         }
 
+        // Update page range preview
+        function updatePageRangePreview() {
+            const pageRangeInput = document.getElementById('pageRange');
+            const previewElement = document.getElementById('pageRangePreview');
+            const pageRange = pageRangeInput.value.trim();
+            
+            if (!pageRange) {
+                previewElement.textContent = 'All pages will be processed';
+                return;
+            }
+            
+            // Validate page range format
+            const isValid = /^(\d+(-\d+)?)(,\s*\d+(-\d+)?)*$/.test(pageRange);
+            
+            if (isValid) {
+                previewElement.textContent = `Pages to process: ${pageRange}`;
+            } else {
+                previewElement.textContent = 'Invalid page range format. Use format like "1-5, 8, 11-13"';
+            }
+        }
+
         // Format label text
         function formatLabel(text) {
             return text.charAt(0).toUpperCase() + text.slice(1).replace(/([A-Z])/g, ' $1').replace(/_/g, ' ');
@@ -1366,6 +1432,12 @@
             document.getElementById('progressFill').style.width = '0%';
             document.getElementById('processBtn').disabled = true;
             document.getElementById('processBtnText').textContent = 'Select Files to Continue';
+            
+            // Remove any existing download area
+            const existingDownloadArea = document.querySelector('.download-area');
+            if (existingDownloadArea) {
+                existingDownloadArea.remove();
+            }
             
             // Reset upload area
             const uploadArea = document.getElementById('uploadArea');
@@ -1406,7 +1478,7 @@
                     const extension = '.' + file.name.split('.').pop().toLowerCase();
                     return currentTool.acceptedTypes.includes(extension);
                 } else {
-                    return file.type === 'application/pdf';
+                    return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
                 }
             });
 
@@ -1525,14 +1597,50 @@
                 // Collect options
                 const options = collectToolOptions();
                 
-                // Simulate processing with progress
-                await simulateProcessing(progressFill, progressText);
+                // Process files based on current tool
+                switch (currentTool.id) {
+                    case 'merge-pdf':
+                        processedPDF = await mergePDFs(selectedFiles, options);
+                        break;
+                    case 'split-pdf':
+                        processedPDF = await splitPDF(selectedFiles[0], options);
+                        break;
+                    case 'compress-pdf':
+                        processedPDF = await compressPDF(selectedFiles[0], options);
+                        break;
+                    case 'protect-pdf':
+                        processedPDF = await protectPDF(selectedFiles[0], options);
+                        break;
+                    case 'rotate-pdf':
+                        processedPDF = await rotatePDF(selectedFiles[0], options);
+                        break;
+                    case 'organize-pdf':
+                        processedPDF = await organizePDF(selectedFiles[0], options);
+                        break;
+                    case 'pdf-to-word':
+                    case 'pdf-to-excel':
+                    case 'pdf-to-ppt':
+                    case 'pdf-to-jpg':
+                        showNotification('Conversion to other formats requires server-side processing. This is a demo.', 'info');
+                        processedPDF = selectedFiles[0]; // Just use original for demo
+                        break;
+                    case 'word-to-pdf':
+                    case 'excel-to-pdf':
+                    case 'ppt-to-pdf':
+                    case 'jpg-to-pdf':
+                        showNotification('Conversion from other formats requires server-side processing. This is a demo.', 'info');
+                        processedPDF = selectedFiles[0]; // Just use original for demo
+                        break;
+                    default:
+                        processedPDF = selectedFiles[0]; // Default to first file
+                }
                 
                 // Generate download links
                 generateDownloadLinks();
                 
                 showNotification('Files processed successfully!', 'success');
             } catch (error) {
+                console.error('Processing error:', error);
                 showNotification('Error processing files: ' + error.message, 'error');
             } finally {
                 isProcessing = false;
@@ -1551,6 +1659,8 @@
                 inputs.forEach(input => {
                     if (input.type === 'checkbox') {
                         options[input.name] = input.checked;
+                    } else if (input.type === 'number') {
+                        options[input.name] = parseInt(input.value);
                     } else {
                         options[input.name] = input.value;
                     }
@@ -1560,37 +1670,259 @@
             return options;
         }
 
-        // Simulate processing with progress
-        function simulateProcessing(progressFill, progressText) {
-            return new Promise((resolve) => {
-                let progress = 0;
-                const interval = setInterval(() => {
-                    progress += Math.random() * 15;
-                    if (progress >= 100) {
-                        progress = 100;
-                        clearInterval(interval);
-                        resolve();
-                    }
+        // Merge PDFs
+        async function mergePDFs(files, options) {
+            const { PDFDocument } = PDFLib;
+            const mergedPdf = await PDFDocument.create();
+            
+            // Update progress
+            updateProgress(10, 'Loading PDFs...');
+            
+            // Load all PDFs
+            const pdfs = [];
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const arrayBuffer = await file.arrayBuffer();
+                const pdfDoc = await PDFDocument.load(arrayBuffer);
+                pdfs.push(pdfDoc);
+                updateProgress(10 + (i / files.length) * 60, `Processing PDF ${i + 1} of ${files.length}`);
+            }
+            
+            // Copy pages
+            for (const pdfDoc of pdfs) {
+                const pages = await mergedPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
+                pages.forEach(page => mergedPdf.addPage(page));
+            }
+            
+            updateProgress(90, 'Finalizing merged PDF...');
+            
+            // Save merged PDF
+            const mergedPdfBytes = await mergedPdf.save();
+            
+            updateProgress(100, 'Merge complete!');
+            
+            return new Blob([mergedPdfBytes], { type: 'application/pdf' });
+        }
+
+        // Split PDF
+        async function splitPDF(file, options) {
+            const { PDFDocument } = PDFLib;
+            const arrayBuffer = await file.arrayBuffer();
+            const pdfDoc = await PDFDocument.load(arrayBuffer);
+            const pageCount = pdfDoc.getPageCount();
+            
+            updateProgress(10, 'Loading PDF...');
+            
+            // Parse page range
+            let pagesToExtract = [];
+            if (options.splitMode === 'range' && options.pageRange) {
+                pagesToExtract = parsePageRange(options.pageRange, pageCount);
+            } else if (options.splitMode === 'pages') {
+                // Extract all pages as individual files
+                pagesToExtract = Array.from({ length: pageCount }, (_, i) => [i]);
+            } else {
+                // Default: extract all pages as one file (same as original)
+                pagesToExtract = [Array.from({ length: pageCount }, (_, i) => i)];
+            }
+            
+            updateProgress(30, 'Splitting pages...');
+            
+            // Create a new PDF for each range
+            const splitPdfs = [];
+            for (let i = 0; i < pagesToExtract.length; i++) {
+                const pageIndices = pagesToExtract[i];
+                const newPdf = await PDFDocument.create();
+                
+                for (const pageIndex of pageIndices) {
+                    const [copiedPage] = await newPdf.copyPages(pdfDoc, [pageIndex]);
+                    newPdf.addPage(copiedPage);
+                }
+                
+                const pdfBytes = await newPdf.save();
+                splitPdfs.push(new Blob([pdfBytes], { type: 'application/pdf' }));
+                
+                updateProgress(30 + (i / pagesToExtract.length) * 60, `Processing split ${i + 1} of ${pagesToExtract.length}`);
+            }
+            
+            updateProgress(100, 'Split complete!');
+            
+            // For demo purposes, we'll just return the first split
+            // In a real app, you'd handle multiple files differently
+            return splitPdfs[0];
+        }
+
+        // Parse page range string (e.g., "1-5, 8, 11-13")
+        function parsePageRange(rangeStr, maxPages) {
+            const ranges = rangeStr.split(',');
+            const pages = new Set();
+            
+            for (const range of ranges) {
+                const trimmed = range.trim();
+                if (!trimmed) continue;
+                
+                if (trimmed.includes('-')) {
+                    const [start, end] = trimmed.split('-').map(Number);
+                    const actualStart = Math.max(1, start);
+                    const actualEnd = Math.min(maxPages, end || start);
                     
-                    progressFill.style.width = progress + '%';
-                    progressText.textContent = `Processing... ${Math.round(progress)}%`;
-                }, 200);
+                    for (let i = actualStart; i <= actualEnd; i++) {
+                        pages.add(i - 1); // Convert to 0-based index
+                    }
+                } else {
+                    const pageNum = Number(trimmed);
+                    if (pageNum >= 1 && pageNum <= maxPages) {
+                        pages.add(pageNum - 1); // Convert to 0-based index
+                    }
+                }
+            }
+            
+            // Convert to array of arrays for splitting
+            return [[...pages]];
+        }
+
+        // Compress PDF
+        async function compressPDF(file, options) {
+            // Note: PDF-lib doesn't support actual compression, this is just a demo
+            const { PDFDocument } = PDFLib;
+            const arrayBuffer = await file.arrayBuffer();
+            
+            updateProgress(10, 'Loading PDF...');
+            
+            const pdfDoc = await PDFDocument.load(arrayBuffer);
+            
+            updateProgress(50, 'Optimizing PDF...');
+            
+            // In a real app, you would apply actual compression here
+            // For demo purposes, we'll just re-save the PDF
+            const pdfBytes = await pdfDoc.save({
+                useObjectStreams: true,
+                // These options would affect compression in a real implementation
+                // but PDF-lib doesn't actually compress the content
             });
+            
+            updateProgress(100, 'Compression complete!');
+            
+            return new Blob([pdfBytes], { type: 'application/pdf' });
+        }
+
+        // Protect PDF with password
+        async function protectPDF(file, options) {
+            const { PDFDocument } = PDFLib;
+            const arrayBuffer = await file.arrayBuffer();
+            
+            updateProgress(10, 'Loading PDF...');
+            
+            const pdfDoc = await PDFDocument.load(arrayBuffer);
+            
+            updateProgress(50, 'Applying protection...');
+            
+            // Note: PDF-lib doesn't support actual encryption, this is just a demo
+            // In a real app, you would use a library that supports PDF encryption
+            const pdfBytes = await pdfDoc.save();
+            
+            updateProgress(100, 'Protection applied!');
+            
+            showNotification('Password protection requires server-side processing in a real implementation', 'info');
+            return new Blob([pdfBytes], { type: 'application/pdf' });
+        }
+
+        // Rotate PDF pages
+        async function rotatePDF(file, options) {
+            const { PDFDocument, degrees } = PDFLib;
+            const arrayBuffer = await file.arrayBuffer();
+            
+            updateProgress(10, 'Loading PDF...');
+            
+            const pdfDoc = await PDFDocument.load(arrayBuffer);
+            const pages = pdfDoc.getPages();
+            
+            updateProgress(30, 'Rotating pages...');
+            
+            const rotationAngle = parseInt(options.rotation) || 90;
+            const direction = options.direction === 'counterclockwise' ? -1 : 1;
+            const angle = degrees(rotationAngle * direction);
+            
+            pages.forEach(page => {
+                page.setRotation(angle);
+            });
+            
+            updateProgress(80, 'Saving rotated PDF...');
+            
+            const pdfBytes = await pdfDoc.save();
+            
+            updateProgress(100, 'Rotation complete!');
+            
+            return new Blob([pdfBytes], { type: 'application/pdf' });
+        }
+
+        // Organize PDF (reorder, delete pages)
+        async function organizePDF(file, options) {
+            const { PDFDocument } = PDFLib;
+            const arrayBuffer = await file.arrayBuffer();
+            
+            updateProgress(10, 'Loading PDF...');
+            
+            const pdfDoc = await PDFDocument.load(arrayBuffer);
+            const pageCount = pdfDoc.getPageCount();
+            
+            // For demo, we'll just reverse the pages
+            // In a real app, you'd implement the actual organization logic
+            const newPdf = await PDFDocument.create();
+            const pageIndices = Array.from({ length: pageCount }, (_, i) => i);
+            
+            if (options.action === 'reorder') {
+                pageIndices.reverse(); // Just reverse for demo
+            } else if (options.action === 'delete') {
+                // Delete every other page for demo
+                for (let i = pageIndices.length - 1; i >= 0; i--) {
+                    if (i % 2 === 0) pageIndices.splice(i, 1);
+                }
+            }
+            
+            updateProgress(40, 'Reorganizing pages...');
+            
+            for (const pageIndex of pageIndices) {
+                const [copiedPage] = await newPdf.copyPages(pdfDoc, [pageIndex]);
+                newPdf.addPage(copiedPage);
+            }
+            
+            updateProgress(80, 'Saving organized PDF...');
+            
+            const pdfBytes = await newPdf.save();
+            
+            updateProgress(100, 'Organization complete!');
+            
+            return new Blob([pdfBytes], { type: 'application/pdf' });
+        }
+
+        // Update progress bar
+        function updateProgress(percent, message) {
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            progressFill.style.width = percent + '%';
+            progressText.textContent = message;
         }
 
         // Generate download links
         function generateDownloadLinks() {
             const processSection = document.querySelector('.process-section');
             
+            // Remove existing download area if any
+            const existingDownloadArea = document.querySelector('.download-area');
+            if (existingDownloadArea) {
+                existingDownloadArea.remove();
+            }
+            
             // Create download area
             const downloadArea = document.createElement('div');
-            downloadArea.className = 'success-message';
+            downloadArea.className = 'download-area';
             downloadArea.innerHTML = `
-                <h3><i class="fas fa-check-circle"></i> Processing Complete!</h3>
+                <h3><i class="fas fa-check-circle" style="color: var(--success-color);"></i> Processing Complete!</h3>
                 <p>Your files have been processed successfully.</p>
                 <div style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                    <button class="btn btn-primary" onclick="downloadFiles()">
-                        <i class="fas fa-download"></i> Download All
+                    <button class="btn btn-primary" onclick="downloadProcessedFile()">
+                        <i class="fas fa-download"></i> Download Processed File
                     </button>
                     <button class="btn btn-secondary" onclick="saveToCloud('google')">
                         <i class="fab fa-google-drive"></i> Save to Drive
@@ -1607,24 +1939,15 @@
             processSection.appendChild(downloadArea);
         }
 
-        // Download files
-        function downloadFiles() {
-            selectedFiles.forEach((file, index) => {
-                setTimeout(() => {
-                    // Create a blob URL for demonstration
-                    const blob = new Blob([`Processed: ${file.name}`], { type: 'application/pdf' });
-                    const url = URL.createObjectURL(blob);
-                    
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `processed_${file.name}`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, index * 500);
-            });
+        // Download processed file
+        function downloadProcessedFile() {
+            if (!processedPDF) {
+                showNotification('No processed file available', 'error');
+                return;
+            }
             
+            const fileName = `processed_${currentTool.id}_${Date.now()}.pdf`;
+            saveAs(processedPDF, fileName);
             showNotification('Download started!', 'success');
         }
 
