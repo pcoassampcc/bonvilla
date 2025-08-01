@@ -8,27 +8,28 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         body { background-color: #f8f8f8; color: #333; }
-        header { background: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80') center/cover no-repeat; height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; color: white; position: relative; }
+        header { background: url('https://bonvillaretreat.co.in/wp-content/uploads/2023/06/Bonvilla-Hero.jpg') center/cover no-repeat; height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; color: white; position: relative; overflow: hidden; }
         header::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); }
-        header h1 { font-size: 3rem; z-index: 1; padding: 0 2rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-        nav { position: fixed; top: 0; width: 100%; background: rgba(255,255,255,0.9); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 100; }
+        header h1 { font-size: 3rem; z-index: 1; animation: fadeInUp 2s ease forwards; opacity: 0; }
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        nav { position: fixed; top: 0; width: 100%; background: rgba(255,255,255,0.9); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 10; }
         nav ul { display: flex; gap: 1.5rem; list-style: none; }
-        nav a { text-decoration: none; color: #333; font-weight: 500; transition: color 0.3s; }
-        nav a:hover { color: #4CAF50; }
-        section { padding: 6rem 2rem; max-width: 1200px; margin: auto; }
-        h2 { text-align: center; margin-bottom: 2rem; font-size: 2rem; color: #4CAF50; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-top: 2rem; }
-        .card { background: white; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: transform 0.3s, box-shadow 0.3s; }
-        .card:hover { transform: translateY(-10px); box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
-        .card img { width: 100%; height: 200px; object-fit: cover; border-radius: 0.75rem; margin-bottom: 1rem; }
-        .card h3 { margin-top: 0.5rem; color: #333; }
-        .card p { color: #666; margin-top: 0.5rem; }
-        .btn { display: inline-block; padding: 0.75rem 1.5rem; background: #4CAF50; color: white; border-radius: 2rem; text-decoration: none; margin-top: 1rem; transition: background 0.3s, transform 0.3s; font-weight: 500; }
-        .btn:hover { background: #45a049; transform: translateY(-2px); }
-        footer { background: #333; color: white; text-align: center; padding: 3rem 2rem; margin-top: 2rem; }
-        .contact-info { text-align: center; margin-bottom: 1.5rem; }
-        .contact-info p { margin-bottom: 0.5rem; }
-        .btn-container { text-align: center; }
+        nav a { text-decoration: none; color: #333; font-weight: 500; position: relative; }
+        nav a::after { content: ''; position: absolute; width: 0; height: 2px; bottom: -2px; left: 0; background-color: #4CAF50; transition: width 0.3s; }
+        nav a:hover::after { width: 100%; }
+        section { padding: 4rem 2rem; max-width: 1200px; margin: auto; opacity: 0; transform: translateY(50px); transition: all 0.6s ease; }
+        section.visible { opacity: 1; transform: translateY(0); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
+        .card { background: white; padding: 1rem; border-radius: 1rem; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: transform 0.3s, box-shadow 0.3s; }
+        .card:hover { transform: translateY(-10px); box-shadow: 0 8px 16px rgba(0,0,0,0.2); }
+        .card img { width: 100%; border-radius: 1rem; }
+        .card h3 { margin-top: 1rem; }
+        .btn { display: inline-block; padding: 0.75rem 1.5rem; background: #4CAF50; color: white; border-radius: 2rem; text-decoration: none; margin-top: 1rem; transition: background 0.3s, transform 0.3s; }
+        .btn:hover { background: #45a049; transform: scale(1.05); }
+        footer { background: #333; color: white; text-align: center; padding: 2rem; }
     </style>
 </head>
 <body>
@@ -49,39 +50,26 @@
 
 <section id="about">
     <h2>About Us</h2>
-    <p>Welcome to Bonvilla Retreat, where nature meets luxury. Nestled amidst serene landscapes, we offer an escape from the hustle of city life. Our eco-friendly cottages, organic cuisines, and adventure activities ensure a rejuvenating stay for all. Established in 2010, we have been providing unforgettable experiences to travelers seeking tranquility and connection with nature.</p>
-    <p>Our retreat spans over 20 acres of lush greenery, featuring organic farms, nature trails, and breathtaking views of the surrounding mountains. We are committed to sustainable tourism and preserving the natural beauty of our location.</p>
+    <p>Welcome to Bonvilla Retreat, where nature meets luxury. Nestled amidst serene landscapes, we offer an escape from the hustle of city life. Our eco-friendly cottages, organic cuisines, and adventure activities ensure a rejuvenating stay for all.</p>
 </section>
 
 <section id="rooms">
     <h2>Our Rooms</h2>
     <div class="grid">
         <div class="card">
-            <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Deluxe Cottage">
+            <img src="https://bonvillaretreat.co.in/wp-content/uploads/2023/06/room1.jpg" alt="Deluxe Cottage">
             <h3>Deluxe Cottage</h3>
-            <p>Enjoy comfort with a touch of nature in our spacious deluxe cottages featuring private balconies, modern amenities, and stunning views.</p>
-            <p><strong>₹5,000/night</strong></p>
-            <div class="btn-container">
-                <a href="#contact" class="btn">Book Now</a>
-            </div>
+            <p>Enjoy comfort with a touch of nature in our spacious deluxe cottages.</p>
         </div>
         <div class="card">
-            <img src="https://images.unsplash.com/photo-1566669437689-9e5e0838c1f0?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Premium Villa">
+            <img src="https://bonvillaretreat.co.in/wp-content/uploads/2023/06/room2.jpg" alt="Premium Villa">
             <h3>Premium Villa</h3>
-            <p>Luxury living spaces with stunning views, private pools, and premium amenities for an unforgettable stay.</p>
-            <p><strong>₹8,500/night</strong></p>
-            <div class="btn-container">
-                <a href="#contact" class="btn">Book Now</a>
-            </div>
+            <p>Luxury living spaces with stunning views and modern amenities.</p>
         </div>
         <div class="card">
-            <img src="https://images.unsplash.com/photo-1565329921943-7e537b7a2ea9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Family Suite">
+            <img src="https://bonvillaretreat.co.in/wp-content/uploads/2023/06/room3.jpg" alt="Family Suite">
             <h3>Family Suite</h3>
-            <p>Perfect for family getaways with ample space, two bedrooms, and a shared living area surrounded by nature.</p>
-            <p><strong>₹7,000/night</strong></p>
-            <div class="btn-container">
-                <a href="#contact" class="btn">Book Now</a>
-            </div>
+            <p>Perfect for family getaways with ample space and privacy.</p>
         </div>
     </div>
 </section>
@@ -89,56 +77,44 @@
 <section id="gallery">
     <h2>Gallery</h2>
     <div class="grid">
-        <div class="card"><img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Nature View"></div>
-        <div class="card"><img src="https://images.unsplash.com/photo-1561501878-aabd62634533?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Poolside"></div>
-        <div class="card"><img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Dining Area"></div>
-        <div class="card"><img src="https://images.unsplash.com/photo-1531058020387-3be344556be6?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Adventure Zone"></div>
+        <div class="card"><img src="https://bonvillaretreat.co.in/wp-content/uploads/2023/06/gallery1.jpg" alt="Nature View"></div>
+        <div class="card"><img src="https://bonvillaretreat.co.in/wp-content/uploads/2023/06/gallery2.jpg" alt="Poolside"></div>
+        <div class="card"><img src="https://bonvillaretreat.co.in/wp-content/uploads/2023/06/gallery3.jpg" alt="Dining Area"></div>
+        <div class="card"><img src="https://bonvillaretreat.co.in/wp-content/uploads/2023/06/gallery4.jpg" alt="Adventure Zone"></div>
     </div>
 </section>
 
 <section id="contact">
     <h2>Contact Us</h2>
-    <div class="contact-info">
-        <p>Ready to book your stay or have questions?</p>
-        <p>Call us at <strong>+91-9876543210</strong></p>
-        <p>Email us at <strong>info@bonvillaretreat.com</strong></p>
-        <p>Address: <strong>Nature Valley Road, Lonavala, Maharashtra 410405</strong></p>
-    </div>
-    <div class="btn-container">
-        <a href="mailto:info@bonvillaretreat.com" class="btn">Send us an Email</a>
-    </div>
+    <p>Call us at <strong>+91-XXXXXXXXXX</strong> or email at <strong>info@bonvillaretreat.co.in</strong></p>
+    <a href="#" class="btn">Book Now</a>
 </section>
 
 <footer>
-    <p>&copy; 2025 Bonvilla Retreat. All rights reserved.</p>
-    <p style="margin-top: 1rem;">Follow us on social media: 
-        <a href="#" style="color: #4CAF50;">Instagram</a> | 
-        <a href="#" style="color: #4CAF50;">Facebook</a> | 
-        <a href="#" style="color: #4CAF50;">Twitter</a>
-    </p>
+    &copy; 2025 Bonvilla Retreat. All rights reserved.
 </footer>
 
 <script>
-    // Smooth scrolling for navigation links
-    document.querySelectorAll('nav a').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
+    const navLinks = document.querySelectorAll('nav a');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
             e.preventDefault();
-            document.querySelector(this.getAttribute('href')).scrollIntoView({
-                behavior: 'smooth'
-            });
+            const target = document.querySelector(this.getAttribute('href'));
+            target.scrollIntoView({ behavior: 'smooth' });
         });
     });
 
-    // Add fixed header background when scrolling
-    window.addEventListener('scroll', function() {
-        const nav = document.querySelector('nav');
-        if (window.scrollY > 50) {
-            nav.style.background = 'rgba(255,255,255,1)';
-            nav.style.boxShadow = '0 4px 10px rgba(0,0,0,0.1)';
-        } else {
-            nav.style.background = 'rgba(255,255,255,0.9)';
-            nav.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
-        }
+    const sections = document.querySelectorAll('section');
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if(entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.3 });
+
+    sections.forEach(section => {
+        observer.observe(section);
     });
 </script>
 
